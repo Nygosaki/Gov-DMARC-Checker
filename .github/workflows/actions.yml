@@ -1,31 +1,30 @@
-name: Weekly database update
+name: Weekly Databse Update
 
 on:
-  pull_request:
+  schedule:
+    - cron: "0 22 * * 5"  # Every Friday at 10 PM UTC
 
 jobs:
-  build:
-    runs-on: windows-latest
+  run_script:
+    name: Run Python Script
+    runs-on: ubuntu-latest
+
     steps:
-      - name: setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10' # install the python version needed
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: execute py script # run main.py
-        run: test.py
-        
-      - uses: actions/checkout@v3
-      - name: Commit 
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git commit -am "test"
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8  # Specify your desired Python version
 
-      - name: push changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: test 
-          
+    - name: Run Python Script
+      run: python test.py  # Adjust this command if needed
+
+    - name: Commit and Push Changes
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add demo_file.csv
+        git commit -m "Weekly update - $(date -u)"
+        git push
