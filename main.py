@@ -4,12 +4,13 @@ import urllib.request
 import csv
 import traceback
 import multiprocessing
+from collections import deque
 
 
 # Function to write data to a CSV file
 def write_to_csv(queue):
     # Open the CSV file in write mode
-    with open('demo_file.csv', 'w', newline='') as dmarc_csv:
+    with open('domains_database.csv', 'w', newline='') as dmarc_csv:
         writer = csv.writer(dmarc_csv)
 
         # Write the header row
@@ -25,6 +26,15 @@ def write_to_csv(queue):
                 break
             writer.writerow(item)
 
+# Function to check if a domain exists in the last 10 lines of the CSV
+def duplicate_check(domain, csv_filename):
+    with open(csv_filename, 'r', newline='') as dmarc_csv:
+        csv_reader = csv.reader(dmarc_csv)
+        last_10_lines = deque(csv_reader, maxlen=10)
+        for row in last_10_lines:
+            if row and row[0] == domain:
+                return True
+    return False
 
 # Main function for processing domain information
 def main_proc(queue, domaininfo_decoded):
@@ -35,32 +45,35 @@ def main_proc(queue, domaininfo_decoded):
 
         # Check if the current line is the header row, if not, process the data
         if dmarc_sort["Domain"] != "Domain Name":
-            try:
-                dmarc_sort["Type"] = domaininfo_split[1]
-            except:
-                dmarc_sort["Type"] = "null"
-            try:
-                dmarc_sort["Agency"] = domaininfo_split[2]
-            except:
-                dmarc_sort["Agency"] = "null"
-            try:
-                dmarc_sort["Organization"] = domaininfo_split[3]
-            except:
-                dmarc_sort["Organization"] = "null"
-            try:
-                dmarc_sort["City"] = domaininfo_split[4]
-            except:
-                dmarc_sort["City"] = "null"
-            try:
-                dmarc_sort["State"] = domaininfo_split[5]
-            except:
-                dmarc_sort["State"] = "null"
-            try:
-                dmarc_sort["Security Contact Email"] = domaininfo_split[6].replace("\n", "")
-            except:
-                dmarc_sort["Security Contact Email"] = "null"
+            if not duplicate_check(dmarc_sort["Domain"], 'domains_database.csv'):
+                try:
+                    dmarc_sort["Type"] = domaininfo_split[1]
+                except:
+                    dmarc_sort["Type"] = "null"
+                try:
+                    dmarc_sort["Agency"] = domaininfo_split[2]
+                except:
+                    dmarc_sort["Agency"] = "null"
+                try:
+                    dmarc_sort["Organization"] = domaininfo_split[3]
+                except:
+                    dmarc_sort["Organization"] = "null"
+                try:
+                    dmarc_sort["City"] = domaininfo_split[4]
+                except:
+                    dmarc_sort["City"] = "null"
+                try:
+                    dmarc_sort["State"] = domaininfo_split[5]
+                except:
+                    dmarc_sort["State"] = "null"
+                try:
+                    dmarc_sort["Security Contact Email"] = domaininfo_split[6].replace("\n", "")
+                except:
+                    dmarc_sort["Security Contact Email"] = "null"
+            else:
+                print(f"Duplicate domain: {dmarc_sort['Domain']}")
         else:
-            return ()
+            return ("Line is header")
 
         # Perform nslookup to retrieve DMARC record information
         nslookup_result = subprocess.run(f"nslookup -type=txt _dmarc.{dmarc_sort['Domain']}",

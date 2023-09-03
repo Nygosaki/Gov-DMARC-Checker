@@ -19,12 +19,12 @@ jobs:
         python-version: 3.8  # Specify your desired Python version
 
     - name: Run Python Script
-      run: python test.py  # Adjust this command if needed
+      run: python main.py  # Adjust this command if needed
 
     - name: Commit and Push Changes
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        git add demo_file.csv
+        git add -A
         git commit -m "Weekly update - $(date -u)"
         git push
