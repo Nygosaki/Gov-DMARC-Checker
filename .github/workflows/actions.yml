@@ -7,7 +7,7 @@ on:
 jobs:
   run_script:
     name: Run Python Script
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - name: Checkout Repository
